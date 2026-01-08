@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { createInputHandler } from "../utils/validation";
 
 export default function useLogin() {
   const [employeeId, setEmployeeId] = useState("");
@@ -15,19 +16,16 @@ export default function useLogin() {
   // สร้าง ref สำหรับ password input
   const passwordInputRef = useRef(null);
 
-  // ฟังก์ชันจัดการการเปลี่ยนแปลง Employee ID (จำกัด 20 ตัว)
-  const handleEmployeeIdChange = (value) => {
-    if (value.length <= 20) {
-      setEmployeeId(value);
-    }
-  };
+  // ใช้ createInputHandler utility แทนการเขียน validation ซ้ำ
+  const handleEmployeeIdChange = createInputHandler(setEmployeeId, {
+    maxLength: 20,
+    alphanumericOnly: true,
+  });
 
-  // ฟังก์ชันจัดการการเปลี่ยนแปลง Password (จำกัด 20 ตัว)
-  const handlePasswordChange = (value) => {
-    if (value.length <= 20) {
-      setPassword(value);
-    }
-  };
+  const handlePasswordChange = createInputHandler(setPassword, {
+    maxLength: 20,
+    alphanumericOnly: true,
+  });
 
   // ฟังก์ชันจัดการเมื่อกด Enter ที่ช่อง Employee ID
   const handleEmployeeIdKeyDown = (e) => {
@@ -58,7 +56,7 @@ export default function useLogin() {
 
     if (hasError) {
       setFieldErrors(newFieldErrors);
-      return;
+      return false;
     }
 
     try {
@@ -69,10 +67,12 @@ export default function useLogin() {
 
       console.log("LOGIN DATA", { employeeId, password });
 
-      // success → redirect / set context
+      // Return success
+      return true;
     } catch (err) {
       console.error(err);
       setError("ລະຫັດພະນັກງານ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ");
+      return false;
     } finally {
       setLoading(false);
     }

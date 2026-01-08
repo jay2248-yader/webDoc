@@ -1,20 +1,29 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import LoginPage from '../pages/LoginPage';
 import Dashboard from '../pages/Dashboard';
-import Layout from '../components/layout/Layout.jsx';
+import MainLayout from '../components/layout/MainLayout';
 
 const AppRoutes = () => {
-  // ตรวจสอบว่า login แล้วหรือยัง (ดูจาก localStorage)
-  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+  const { isAuthenticated, loading } = useAuth();
+
+  // Show loading state while checking authentication
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-2xl text-gray-600">ກຳລັງໂຫຼດ...</div>
+      </div>
+    );
+  }
 
   return (
     <Routes>
-      {/* Route Login */}
+      {/* Login Route */}
       <Route 
         path="/login" 
         element={
-          isLoggedIn ? (
+          isAuthenticated ? (
             <Navigate to="/dashboard" replace />
           ) : (
             <LoginPage />
@@ -26,8 +35,8 @@ const AppRoutes = () => {
       <Route
         path="/"
         element={
-          isLoggedIn ? (
-            <Layout />
+          isAuthenticated ? (
+            <MainLayout title="ໜ້າຫຼັກ" />
           ) : (
             <Navigate to="/login" replace />
           )
@@ -35,9 +44,10 @@ const AppRoutes = () => {
       >
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
+        {/* Add more routes here in the future */}
       </Route>
 
-      {/* 404 */}
+      {/* 404 - Redirect to login */}
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );

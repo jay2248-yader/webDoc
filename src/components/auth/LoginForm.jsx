@@ -1,8 +1,13 @@
 import useLogin from "../../hooks/useLogin";
-import EyeIcon from "../../assets/icon/eye-solid.svg";
-import EyeSlashIcon from "../../assets/icon/eye-low-vision-solid.svg";
+import useAuth from "../../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import FormInput from "../common/FormInput";
+import Button from "../common/Button";
+import ErrorMessage from "../common/ErrorMessage";
 
 export default function LoginForm() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const {
     employeeId,
     password,
@@ -15,102 +20,70 @@ export default function LoginForm() {
     handlePasswordChange,
     handleEmployeeIdKeyDown,
     setShowPassword,
-    handleSubmit,
+    handleSubmit: handleFormSubmit,
   } = useLogin();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    const success = await handleFormSubmit(e);
+    
+    if (success) {
+      // Login to AuthContext
+      login({
+        employeeId,
+        role: 'Admin', // TODO: Get from API response
+      });
+      
+      // Navigate to dashboard
+      navigate('/dashboard');
+    }
+  };
 
   return (
     <form
       onSubmit={handleSubmit}
       className="flex flex-col justify-center gap-5 w-full"
     >
-      {/* Error */}
-      {error && (
-        <div className="bg-red-500/20 border border-red-400 text-red-100 px-4 py-2 rounded-lg text-sm">
-          {error}
-        </div>
-      )}
+      {/* General Error Message */}
+      <ErrorMessage message={error} />
 
-      {/* ID */}
-      <div>
-        <label className="block text-white text-xm mb-2">ລະຫັດພະນັກງານ</label>
-        <input
-          type="text"
-          placeholder="ກະລຸນາປ້ອນລະຫັດພະນັກງານ"
-          value={employeeId}
-          onChange={(e) => handleEmployeeIdChange(e.target.value)}
-          onKeyDown={handleEmployeeIdKeyDown}
-          maxLength={20}
-          className={`w-full rounded-xl bg-white/20 px-5 py-4 text-white placeholder-white/60
-    focus:outline-none focus:ring-2 transition-all duration-200
-    hover:bg-white/30 hover:border-white/70
-    ${
-      fieldErrors.employeeId
-        ? "border-2 border-red-500 focus:ring-red-500 hover:border-red-400"
-        : "border border-white/40 focus:ring-white/60"
-    }
-  `}
-        />
+      {/* Employee ID Input */}
+      <FormInput
+        label="ລະຫັດພະນັກງານ"
+        type="text"
+        placeholder="ກະລຸນາປ້ອນລະຫັດພະນັກງານ"
+        value={employeeId}
+        onChange={(e) => handleEmployeeIdChange(e.target.value)}
+        onKeyDown={handleEmployeeIdKeyDown}
+        error={fieldErrors.employeeId}
+        hasError={!!fieldErrors.employeeId}
+        maxLength={20}
+      />
 
-        {fieldErrors.employeeId && (
-          <p className="text-red-300 text-sm mt-1 ml-1">
-            {fieldErrors.employeeId}
-          </p>
-        )}
-      </div>
+      {/* Password Input */}
+      <FormInput
+        label="ລະຫັດຜ່ານ"
+        type="password"
+        placeholder="ກະລຸນາປ້ອນລະຫັດຜ່ານ"
+        value={password}
+        onChange={(e) => handlePasswordChange(e.target.value)}
+        error={fieldErrors.password}
+        hasError={!!fieldErrors.password}
+        maxLength={20}
+        showPassword={showPassword}
+        onTogglePassword={() => setShowPassword(!showPassword)}
+        inputRef={passwordInputRef}
+      />
 
-      {/* Password */}
-      <div className="relative">
-        <label className="block text-white text-xm mb-2">ລະຫັດຜ່ານ</label>
-        <input
-          ref={passwordInputRef}
-          type={showPassword ? "text" : "password"}
-          placeholder="ກະລຸນາປ້ອນລະຫັດຜ່ານ"
-          value={password}
-          onChange={(e) => handlePasswordChange(e.target.value)}
-          maxLength={20}
-          className={`w-full rounded-xl bg-white/20 px-5 py-4 text-white pr-14 placeholder-white/60
-    focus:outline-none focus:ring-2 transition-all duration-200
-    hover:bg-white/30 hover:border-white/70
-    ${
-      fieldErrors.password
-        ? "border-2 border-red-500 focus:ring-red-500 hover:border-red-400"
-        : "border border-white/40 focus:ring-white/60"
-    }
-  `}
-        />
-
-        <button
-          type="button"
-          onClick={() => setShowPassword(!showPassword)}
-          className="absolute right-4 top-12 text-white/70 hover:text-white transition-all duration-200 ease-in-out transform hover:scale-110 cursor-pointer"
-        >
-          <img
-            src={showPassword ? EyeSlashIcon : EyeIcon}
-            alt={showPassword ? "ຊ່ອນລະຫັດຜ່ານ" : "ເບິ່ງລະຫັດຜ່ານ"}
-            className="w-6 h-6 filter invert brightness-100"
-          />
-        </button>
-
-        {fieldErrors.password && (
-          <p className="text-red-300 text-sm mt-1 ml-1">
-            {fieldErrors.password}
-          </p>
-        )}
-      </div>
-
-      {/* Button */}
-      <button
-        disabled={loading}
-        className={`mt-4 w-full py-4 rounded-xl font-bold text-lg transition-all duration-200 ease-in-out
-    ${
-      loading
-        ? "bg-white/40 text-white cursor-not-allowed"
-        : "bg-white text-blue-700 hover:bg-blue-50 hover:scale-105 hover:shadow-lg cursor-pointer"
-    }
-  `}
+      {/* Submit Button */}
+      <Button
+        type="submit"
+        loading={loading}
+        className="mt-4"
       >
         {loading ? "ກຳລັງເຂົ້າສູ່ລະບົບ..." : "ເຂົ້າສູ່ລະບົບ"}
-      </button>
+      </Button>
     </form>
   );
 }
