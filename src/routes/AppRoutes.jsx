@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import LoginPage from '../pages/LoginPage';
 import Dashboard from '../pages/Dashboard';
+import UserPage from '../pages/UserPage';
 import MainLayout from '../components/layout/MainLayout';
 
 const AppRoutes = () => {
@@ -36,7 +37,7 @@ const AppRoutes = () => {
         path="/"
         element={
           isAuthenticated ? (
-            <MainLayout title="ໜ້າຫຼັກ" />
+            <MainLayout />
           ) : (
             <Navigate to="/login" replace />
           )
@@ -44,6 +45,10 @@ const AppRoutes = () => {
       >
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
+        <Route path="users">
+          <Route index element={<Navigate to="list" replace />} />
+          <Route path="list" element={<UserPage />} />
+        </Route>
         {/* Add more routes here in the future */}
       </Route>
 

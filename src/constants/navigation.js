@@ -2,6 +2,8 @@
  * Navigation menu items for sidebar
  */
 import HomeIcon from "../assets/icon/house-solid.svg";
+import UsersIcon from "../assets/icon/Users.svg";
+
 
 export const MENU_ITEMS = [
   {
@@ -13,7 +15,7 @@ export const MENU_ITEMS = [
   {
     id: "users",
     label: "ຈັດການຜູ້ໃຊ້",
-       icon: HomeIcon,
+       icon: UsersIcon,
     path: "/users",
     children: [
       {
