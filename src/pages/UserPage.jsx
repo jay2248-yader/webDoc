@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
-import Button from "../components/common/Button";
-import FormInput from "../components/common/FormInput"; // ✅ ปรับ path ให้ตรงโปรเจกต์คุณ
-
-import userplus from "../assets/icon/userplus.svg";
-import search from "../assets/icon/search.svg"; // ✅ ใช้ไฟล์ search.svg
+import UserToolbar from "../components/users/UserToolbar";
+import UsersTable from "../components/users/UsersTable";
+import UserFormModal from "../components/users/UserFormModal";
+import LoadingDialog from "../components/common/LoadingDialog";
+import { filterUsers, paginate, getTotalPages } from "../utils/filter";
 
 const users = [
   {
@@ -50,176 +50,126 @@ const users = [
 
 export default function UserPage() {
   const [searchText, setSearchText] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const filteredUsers = useMemo(() => {
-    const q = searchText.trim().toLowerCase();
-    if (!q) return users;
+  // 1) filter
+  const filtered = useMemo(() => filterUsers(users, searchText), [searchText]);
 
-    return users.filter((u) => {
-      const text = `${u.id} ${u.studentId} ${u.name} ${u.email} ${u.status} ${u.role}`.toLowerCase();
-      return text.includes(q);
-    });
-  }, [searchText]);
+  // 2) total pages
+  const totalPages = useMemo(
+    () => getTotalPages(filtered.length, pageSize),
+    [filtered.length, pageSize]
+  );
+
+  // 3) safePage (derive only — no setState)
+  const safePage = Math.min(Math.max(page, 1), totalPages);
+
+  // 4) paginate
+  const pageUsers = useMemo(
+    () => paginate(filtered, safePage, pageSize),
+    [filtered, safePage, pageSize]
+  );
+
+  const handleSearchChange = (v) => {
+    setSearchText(v);
+    setPage(1); // ✅ reset page at the source (event)
+  };
+
+  const handlePageSizeChange = (nextSize) => {
+    setPageSize(nextSize);
+    setPage(1); // ✅ reset page at the source (event)
+  };
+
+  const handlePageChange = (nextPage) => {
+    // ✅ clamp before set (event)
+    const clamped = Math.min(Math.max(nextPage, 1), totalPages);
+    setPage(clamped);
+  };
+
+  const handleCreateUser = () => {
+    setIsLoading(true);
+    setEditingUser(null);
+
+    // จำลองการโหลด form (ในกรณีที่ต้องโหลดข้อมูลก่อนเปิด form)
+    setTimeout(() => {
+      setIsLoading(false);
+      setShowFormModal(true);
+    }, 500);
+  };
+
+  const handleEditUser = (user) => {
+    setIsLoading(true);
+    setEditingUser(user);
+
+    // จำลองการโหลด form (ในกรณีที่ต้องโหลดข้อมูลก่อนเปิด form)
+    setTimeout(() => {
+      setIsLoading(false);
+      setShowFormModal(true);
+    }, 500);
+  };
+
+  const handleCloseModal = () => {
+    setShowFormModal(false);
+    setEditingUser(null);
+  };
+
+  const handleSubmitUser = async (formData) => {
+    setIsLoading(true);
+
+    // จำลองการเรียก API (ใช้เวลา 2 วินาที)
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    if (editingUser) {
+      console.log("update user", editingUser.id, formData);
+    } else {
+      console.log("create user", formData);
+    }
+
+    setIsLoading(false);
+    handleCloseModal();
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        {/* ✅ Search (FormInput) */}
-        <div className="w-full md:max-w-md">
-          <FormInput
-            label=""
-            theme="light"
-            placeholder="ຄົ້ນຫາ"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-rightIcon={
-  <img
-    src={search}
-    alt="search"
-    className="h-4 w-4"
-    style={{
-      filter:
-        "invert(32%) sepia(96%) saturate(1832%) hue-rotate(186deg) brightness(92%) contrast(87%)",
-    }}
-  />
-}
+      <UserToolbar
+        searchText={searchText}
+        onSearchChange={handleSearchChange}
+        onCreate={handleCreateUser}
+      />
 
-          />
-        </div>
+      <UsersTable
+        users={pageUsers}
+        page={safePage}              // ✅ ใช้ safePage ใน UI
+        pageSize={pageSize}
+        totalPages={totalPages}
+        totalItems={filtered.length}
+        onEdit={handleEditUser}
+        onDelete={(u) => console.log("delete", u)}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+      />
 
-        {/* ✅ Create User Button + icon */}
-        <Button
-          fullWidth={false}
-          variant="ghost"
-          size="sm"
-          className="bg-[#0F75BC] text-white hover:bg-blue-700 hover:scale-100 hover:shadow-none"
-        >
-          <span className="flex items-center gap-2">
-            <img
-              src={userplus}
-              alt="Add user"
-              className="h-8 w-8 brightness-0 invert"
-            />
-            ສ້າງຜູ້ໃຊ້
-          </span>
-        </Button>
-      </div>
+      <UserFormModal
+        isOpen={showFormModal}
+        user={editingUser}
+        onClose={handleCloseModal}
+        onSubmit={handleSubmitUser}
+      />
 
-      <div className="overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm">
-        <table className="min-w-full text-sm">
-          <thead className="bg-[#0F75BC] text-white">
-            <tr>
-              <th className="px-4 py-3 text-left font-semibold">ລຳດັບ</th>
-              <th className="px-4 py-3 text-left font-semibold">ລະຫັດ</th>
-              <th className="px-4 py-3 text-left font-semibold">ຊື່</th>
-              <th className="px-4 py-3 text-left font-semibold">ອີເມວ</th>
-              <th className="px-4 py-3 text-left font-semibold">
-                ສະຖານະການໃຊ້ງານ
-              </th>
-              <th className="px-4 py-3 text-left font-semibold">ບົດບາດ</th>
-              <th className="px-4 py-3 text-left font-semibold">ຈັດການ</th>
-            </tr>
-          </thead>
-
-          <tbody className="text-gray-700">
-            {filteredUsers.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-gray-500">
-                  ບໍ່ພົບຂໍ້ມູນ
-                </td>
-              </tr>
-            ) : (
-              filteredUsers.map((user) => (
-                <tr
-                  key={user.id}
-                  className="border-b border-blue-100 last:border-b-0"
-                >
-                  <td className="px-4 py-3">{user.id}</td>
-                  <td className="px-4 py-3">{user.studentId}</td>
-                  <td className="px-4 py-3">{user.name}</td>
-                  <td className="px-4 py-3">{user.email}</td>
-                  <td className="px-4 py-3">{user.status}</td>
-                  <td className="px-4 py-3">{user.role}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        fullWidth={false}
-                        variant="ghost"
-                        size="sm"
-                        className="w-16 inline-flex items-center justify-center rounded-md bg-blue-200 px-2 py-1 text-xs text-blue-700 hover:bg-blue-50 hover:scale-100 hover:shadow-none"
-                      >
-                        ແກ້ໄຂ
-                      </Button>
-                      <Button
-                        fullWidth={false}
-                        variant="ghost"
-                        size="sm"
-                        className="w-16 inline-flex items-center justify-center rounded-md bg-red-400 px-2 py-1 text-xs text-white hover:bg-red-500 hover:scale-100 hover:shadow-none"
-                      >
-                        ລົບ
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-
-        <div className="flex flex-col gap-3 border-t border-blue-200 px-6 py-4 text-sm text-gray-600 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-2">
-            <span>ຈຳນວນລາຍການ</span>
-            <select className="rounded-md border border-gray-200 px-2 py-1 text-sm focus:border-blue-400 focus:outline-none">
-              <option>10</option>
-              <option>20</option>
-              <option>50</option>
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              fullWidth={false}
-              variant="outline"
-              size="sm"
-              className="w-auto rounded-md border-gray-200 px-2 py-1 text-sm text-gray-500 hover:scale-100 hover:shadow-none"
-            >
-              «
-            </Button>
-            <Button
-              fullWidth={false}
-              variant="outline"
-              size="sm"
-              className="w-auto rounded-md border-gray-200 px-2 py-1 text-sm text-gray-500 hover:scale-100 hover:shadow-none"
-            >
-              ‹
-            </Button>
-
-            <span className="rounded-md border border-gray-200 px-3 py-1 text-sm">
-              1
-            </span>
-            <span>/</span>
-            <span>3</span>
-            <span className="text-gray-400">20 ລາຍການ</span>
-
-            <Button
-              fullWidth={false}
-              variant="outline"
-              size="sm"
-              className="w-auto rounded-md border-gray-200 px-2 py-1 text-sm text-gray-500 hover:scale-100 hover:shadow-none"
-            >
-              ›
-            </Button>
-            <Button
-              fullWidth={false}
-              variant="outline"
-              size="sm"
-              className="w-auto rounded-md border-gray-200 px-2 py-1 text-sm text-gray-500 hover:scale-100 hover:shadow-none"
-            >
-              »
-            </Button>
-          </div>
-        </div>
-      </div>
+      <LoadingDialog
+        isOpen={isLoading}
+        message={
+          showFormModal
+            ? editingUser
+              ? "ກຳລັງອັບເດດຂໍ້ມູນ..."
+              : "ກຳລັງສ້າງຜູ້ໃຊ້..."
+            : "ກຳລັງໂຫຼດ..."
+        }
+      />
     </div>
   );
 }
