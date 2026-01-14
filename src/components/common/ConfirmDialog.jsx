@@ -54,18 +54,19 @@ export default function ConfirmDialog({
             variant={cancelVariant}
             size="md"
             onClick={handleCancel}
+            className="min-w-20"
           >
             {cancelText}
           </Button>
           <Button
             fullWidth={false}
-            variant={danger ? "ghost" : confirmVariant}
+            variant={danger ? "secondary" : confirmVariant}
             size="md"
             onClick={handleConfirm}
             className={
               danger
-                ? "bg-red-500 text-white hover:bg-red-600 hover:scale-105"
-                : ""
+                ? "min-w-20 bg-red-500 text-white hover:bg-red-600"
+                : "min-w-20"
             }
           >
             {confirmText}

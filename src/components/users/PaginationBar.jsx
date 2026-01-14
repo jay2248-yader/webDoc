@@ -1,4 +1,5 @@
 import Button from "../common/Button";
+import Select from "../common/Select";
 
 export default function PaginationBar({
   page,
@@ -11,19 +12,24 @@ export default function PaginationBar({
   const canPrev = page > 1;
   const canNext = page < totalPages;
 
+  const pageSizeOptions = [
+    { value: "10", label: "10" },
+    { value: "20", label: "20" },
+    { value: "50", label: "50" },
+  ];
+
   return (
     <div className="flex flex-col gap-3 px-6 py-4 text-sm text-gray-600 md:flex-row md:items-center md:justify-between">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 relative">
         <span>ຈຳນວນລາຍການ</span>
-        <select
-          value={pageSize}
-          onChange={(e) => onPageSizeChange(Number(e.target.value))}
-          className="rounded-md border border-gray-200 px-2 py-1 text-sm focus:border-blue-400 focus:outline-none"
-        >
-          <option value={10}>10</option>
-          <option value={20}>20</option>
-          <option value={50}>50</option>
-        </select>
+        <div className="w-20 relative z-10">
+          <Select
+            value={String(pageSize)}
+            onChange={(e) => onPageSizeChange(Number(e.target.value))}
+            options={pageSizeOptions}
+            theme="light"
+          />
+        </div>
       </div>
 
       <div className="flex items-center gap-2">

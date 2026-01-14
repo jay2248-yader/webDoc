@@ -47,6 +47,85 @@ const users = [
     status: "True",
     role: "User",
   },
+  {
+    id: "001",
+    studentId: "1111278",
+    name: "ສຸພາພອນ",
+    email: "soupaphone@gmail.com",
+    status: "True",
+    role: "User",
+  },
+  {
+    id: "002",
+    studentId: "1112278",
+    name: "ສຸພາພອນ",
+    email: "soupaphone@gmail.com",
+    status: "True",
+    role: "User",
+  },
+  {
+    id: "003",
+    studentId: "1112278",
+    name: "ສຸພາພອນ",
+    email: "soupaphone@gmail.com",
+    status: "True",
+    role: "User",
+  },
+  {
+    id: "004",
+    studentId: "1112278",
+    name: "ສຸພາພອນ",
+    email: "soupaphone@gmail.com",
+    status: "True",
+    role: "User",
+  },
+  {
+    id: "005",
+    studentId: "1112278",
+    name: "ສຸພາພອນ",
+    email: "soupaphone@gmail.com",
+    status: "True",
+    role: "User",
+  },{
+    id: "001",
+    studentId: "1111278",
+    name: "ສຸພາພອນ",
+    email: "soupaphone@gmail.com",
+    status: "True",
+    role: "User",
+  },
+  {
+    id: "002",
+    studentId: "1112278",
+    name: "ສຸພາພອນ",
+    email: "soupaphone@gmail.com",
+    status: "True",
+    role: "User",
+  },
+  {
+    id: "003",
+    studentId: "1112278",
+    name: "ສຸພາພອນ",
+    email: "soupaphone@gmail.com",
+    status: "True",
+    role: "User",
+  },
+  {
+    id: "004",
+    studentId: "1112278",
+    name: "ສຸພາພອນ",
+    email: "soupaphone@gmail.com",
+    status: "True",
+    role: "User",
+  },
+  {
+    id: "005",
+    studentId: "1112278",
+    name: "ສຸພາພອນ",
+    email: "soupaphone@gmail.com",
+    status: "True",
+    role: "User",
+  },
 ];
 
 export default function UserPage() {
@@ -206,7 +285,7 @@ export default function UserPage() {
         message={successMessage}
         onClose={() => setShowSuccess(false)}
         autoClose={true}
-        autoCloseDuration={2000000}
+        autoCloseDuration={1500}
       />
     </div>
   );
