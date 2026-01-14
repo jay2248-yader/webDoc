@@ -50,10 +50,13 @@ export default function UserFormModal({
       return;
     }
 
-    // เริ่ม animation ก่อน submit
+    // ปิด form ด้วย animation ก่อน
     setIsClosing(true);
     setTimeout(() => {
+      // ส่งข้อมูลไปให้ parent จัดการ loading และ submit
       onSubmit(formData);
+
+      // รีเซ็ต form
       setFormData({
         studentId: "",
         name: "",
@@ -66,7 +69,7 @@ export default function UserFormModal({
       });
       setErrors({});
       setIsClosing(false);
-    }, 250);
+    }, 300);
   };
 
   const handleClose = () => {

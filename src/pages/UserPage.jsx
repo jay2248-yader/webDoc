@@ -3,6 +3,7 @@ import UserToolbar from "../components/users/UserToolbar";
 import UsersTable from "../components/users/UsersTable";
 import UserFormModal from "../components/users/UserFormModal";
 import LoadingDialog from "../components/common/LoadingDialog";
+import SuccessDialog from "../components/common/SuccessDialog";
 import { filterUsers, paginate, getTotalPages } from "../utils/filter";
 
 const users = [
@@ -55,6 +56,8 @@ export default function UserPage() {
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   // 1) filter
   const filtered = useMemo(() => filterUsers(users, searchText), [searchText]);
@@ -118,6 +121,13 @@ export default function UserPage() {
   };
 
   const handleSubmitUser = async (formData) => {
+    // ปิด modal ก่อน (modal จะ slide down เอง)
+    setShowFormModal(false);
+
+    // รอ animation ของ modal เสร็จก่อน (300ms)
+    await new Promise(resolve => setTimeout(resolve, 350));
+
+    // แสดง loading dialog
     setIsLoading(true);
 
     // จำลองการเรียก API (ใช้เวลา 2 วินาที)
@@ -125,12 +135,31 @@ export default function UserPage() {
 
     if (editingUser) {
       console.log("update user", editingUser.id, formData);
+      setSuccessMessage("ອັບເດດຜູ້ໃຊ້ສຳເລັດແລ້ວ");
     } else {
       console.log("create user", formData);
+      setSuccessMessage("ສ້າງຜູ້ໃຊ້ສຳເລັດແລ້ວ");
     }
 
+    // ปิด loading และแสดง success
     setIsLoading(false);
-    handleCloseModal();
+    setEditingUser(null);
+    setShowSuccess(true);
+  };
+
+  const handleDeleteUser = async (user) => {
+    // แสดง loading dialog
+    setIsLoading(true);
+
+    // จำลองการเรียก API (ใช้เวลา 1.5 วินาที)
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    console.log("delete user", user);
+
+    // ปิด loading และแสดง success
+    setIsLoading(false);
+    setSuccessMessage(`ລົບຜູ້ໃຊ້ "${user.name}" ສຳເລັດແລ້ວ`);
+    setShowSuccess(true);
   };
 
   return (
@@ -148,7 +177,7 @@ export default function UserPage() {
         totalPages={totalPages}
         totalItems={filtered.length}
         onEdit={handleEditUser}
-        onDelete={(u) => console.log("delete", u)}
+        onDelete={handleDeleteUser}
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
       />
@@ -169,6 +198,15 @@ export default function UserPage() {
               : "ກຳລັງສ້າງຜູ້ໃຊ້..."
             : "ກຳລັງໂຫຼດ..."
         }
+      />
+
+      <SuccessDialog
+        isOpen={showSuccess}
+        title="ສຳເລັດ"
+        message={successMessage}
+        onClose={() => setShowSuccess(false)}
+        autoClose={true}
+        autoCloseDuration={2000000}
       />
     </div>
   );
