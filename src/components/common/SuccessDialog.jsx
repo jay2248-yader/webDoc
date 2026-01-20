@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import Button from "./Button";
-import cscLogo from "../../assets/Logo/Artboard.svg";
 
 export default function SuccessDialog({
   isOpen,
@@ -9,6 +7,7 @@ export default function SuccessDialog({
   autoCloseDuration = 2000,
 }) {
   const [isClosing, setIsClosing] = useState(false);
+  const [showCheck, setShowCheck] = useState(false);
   const timerRef = useRef(null);
   const closedRef = useRef(false);
 
@@ -29,6 +28,7 @@ export default function SuccessDialog({
     setTimeout(() => {
       onClose?.();
       setIsClosing(false);
+      setShowCheck(false);
       closedRef.current = false;
     }, 300);
   }, [onClose, clearTimer]);
@@ -36,280 +36,109 @@ export default function SuccessDialog({
   useEffect(() => {
     if (isOpen) {
       closedRef.current = false;
+      const checkTimer = setTimeout(() => setShowCheck(true), 200);
+
+      let autoCloseTimer = null;
+      if (autoClose) {
+        clearTimer();
+        autoCloseTimer = setTimeout(handleClose, autoCloseDuration);
+        timerRef.current = autoCloseTimer;
+      }
+
+      return () => {
+        clearTimeout(checkTimer);
+        clearTimer();
+      };
     } else {
       clearTimer();
     }
-
-    if (isOpen && autoClose) {
-      clearTimer();
-      timerRef.current = setTimeout(handleClose, autoCloseDuration);
-    }
-
-    return () => clearTimer();
   }, [isOpen, autoClose, autoCloseDuration, handleClose, clearTimer]);
 
   if (!isOpen && !isClosing) return null;
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm ${
-        isClosing ? "animate-fadeOut" : "animate-fadeIn"
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
+        isClosing ? "opacity-0" : "opacity-100"
       }`}
       onClick={handleClose}
     >
       <div
-        className={`bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 relative overflow-hidden ${
-          isClosing ? "animate-slideDown" : "animate-slideUp"
+        className={`bg-white rounded-2xl shadow-2xl p-10 max-w-sm w-full mx-4 transform transition-all duration-300 ${
+          isClosing
+            ? "scale-95 opacity-0 translate-y-4"
+            : "scale-100 opacity-100 translate-y-0"
         }`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Floating checkmark icons */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden ">
-          {/*ຂ້າງຊ້າຍ*/}
-          <div className="absolute top-32 left-27  w-6 h-6 rounded-full border-2  bg-blue-700 border-blue-100 flex items-center justify-center animate-bounce-slow">
-            <svg
-              className="w-4 h-4 text-blue-100"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
+        <div className="flex flex-col items-center">
+          {/* Animated success circle */}
+          <div
+            className={`relative w-24 h-24 mb-6 transition-all duration-500 ${
+              showCheck ? "scale-100" : "scale-0"
+            }`}
+          >
+            {/* Outer ring animation */}
+            <div
+              className={`absolute inset-0 rounded-full border-4 border-green-200 transition-all duration-700 ${
+                showCheck ? "scale-110 opacity-0" : "scale-100 opacity-100"
+              }`}
+            />
 
-          <div className="absolute top-19 left-32  w-4 h-4 rounded-full border-2  bg-blue-500 border-blue-100 flex items-center justify-center animate-bounce-slow">
-            <svg
-              className="w-2 h-2 text-blue-100"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
+            {/* Main circle */}
+            <div className="absolute inset-0 bg-gradient-to-br from-green-400 to-green-500 rounded-full shadow-lg flex items-center justify-center">
+              {/* Checkmark */}
+              <svg
+                className={`w-12 h-12 text-white transition-all duration-300 delay-200 ${
+                  showCheck ? "opacity-100 scale-100" : "opacity-0 scale-50"
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={3}
+                  d="M5 13l4 4L19 7"
+                  className={showCheck ? "animate-draw-check" : ""}
+                  style={{
+                    strokeDasharray: 24,
+                    strokeDashoffset: showCheck ? 0 : 24,
+                    transition: "stroke-dashoffset 0.4s ease-out 0.3s",
+                  }}
+                />
+              </svg>
+            </div>
 
-          <div className="absolute top-25 left-40  w-2 h-2 rounded-full border-2  bg-blue-500 border-blue-100 flex items-center justify-center animate-bounce-slow">
-            <svg
-              className="w-2 h-2 text-blue-100"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-
-          <div className="absolute top-60 left-25  w-4 h-4 rounded-full border-2  bg-blue-500 border-blue-100 flex items-center justify-center animate-bounce-slow">
-            <svg
-              className="w-2 h-2 text-blue-100"
-              fill="currentColor"
-              viewBox="0 0 20    20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-
-          <div className="absolute bottom-20 left-18  w-8 h-8 rounded-full bg-blue-400 flex items-center justify-center animate-bounce-slow animation-delay-300">
-            <svg
-              className="w-7 h-7 text-blue-100"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-
-          <div className="absolute bottom-5 left-52  w-3 h-3 rounded-full  bg-blue-400 flex items-center justify-center animate-bounce-slow animation-delay-300">
-            <svg
-              className="w-2 h-2 text-blue-100"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-
-          <div className="absolute bottom-30 left-10  w-5 h-5 rounded-full bg-blue-400 flex items-center justify-center animate-bounce-slow animation-delay-300">
-            <svg
-              className="w-4 h-4 text-blue-100"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-
-          <div className="absolute bottom-23 left-33  w-2 h-2 rounded-full border-2 border-blue-400 flex items-center justify-center animate-bounce-slow animation-delay-300">
-            <svg
-              className="w-1 h-1 text-blue-500"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-
-          <div className="absolute bottom-22 left-56  w-1 h-1 rounded-full border-2 border-blue-400 flex items-center justify-center animate-bounce-slow animation-delay-300">
-            <svg
-              className="w-1 h-1 text-blue-500"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-
-          {/*ຂ້າງຂວາ*/}
-
-          <div className="absolute bottom-25 left-80  w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center animate-bounce-slow animation-delay-300">
-            <svg
-              className="w-5 h-5 text-blue-100"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-
-          <div className="absolute bottom-23 left-92  w-4 h-4 rounded-full bg-blue-300 flex items-center justify-center animate-bounce-slow animation-delay-300">
-            <svg
-              className="w-3 h-3 text-blue-100"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-
-          <div className="absolute bottom-36 left-92  w-7 h-7 rounded-full bg-blue-400 flex items-center justify-center animate-bounce-slow animation-delay-300">
-            <svg
-              className="w-6 h-6 text-blue-100"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-
-          <div className="absolute bottom-37 left-78  w-2 h-2 rounded-full bg-blue-300 flex items-center justify-center animate-bounce-slow animation-delay-300">
-            <svg
-              className="w-1 h-1 text-blue-100"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-
-          <div className="absolute bottom-45 left-82  w-4 h-4 rounded-full bg-blue-300 flex items-center justify-center animate-bounce-slow animation-delay-300">
-            <svg
-              className="w-3 h-3 text-blue-100"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-
-          <div className="absolute bottom-50 left-75  w-3 h-3 rounded-full bg-blue-300 flex items-center justify-center animate-bounce-slow animation-delay-300">
-            <svg
-              className="w-2 h-2 text-blue-100"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-
-          <div className="absolute bottom-10 left-82  w-1 h-1 rounded-full border-2 border-blue-400 flex items-center justify-center animate-bounce-slow animation-delay-300">
-            <svg
-              className="w-1 h-1 text-blue-500"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-        </div>
-
-        {/* Main content */}
-        <div className="relative z-10">
-          <div className="flex justify-center mb-4">
-            <img
-              src={cscLogo}
-              alt="CSC Logo"
-              className="w-38 h-38 object-contain"
+            {/* Sparkles */}
+            <div
+              className={`absolute -top-2 -right-2 w-4 h-4 bg-yellow-400 rounded-full transition-all duration-500 delay-300 ${
+                showCheck ? "opacity-100 scale-100" : "opacity-0 scale-0"
+              }`}
+            />
+            <div
+              className={`absolute -bottom-1 -left-1 w-3 h-3 bg-green-300 rounded-full transition-all duration-500 delay-400 ${
+                showCheck ? "opacity-100 scale-100" : "opacity-0 scale-0"
+              }`}
+            />
+            <div
+              className={`absolute top-0 -left-3 w-2 h-2 bg-blue-400 rounded-full transition-all duration-500 delay-500 ${
+                showCheck ? "opacity-100 scale-100" : "opacity-0 scale-0"
+              }`}
             />
           </div>
 
-<h3
-  className="text-5xl font-medium text-[#0F75BC] mb-3 text-center drop-shadow-lg"
->
-  ສຳເລັດແລ້ວ
-</h3>
-
-
+          {/* Text */}
+          <h3
+            className={`text-2xl font-semibold text-[#0F75BC] text-center transition-all duration-500 delay-300 ${
+              showCheck
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-4"
+            }`}
+          >
+            ສຳເລັດແລ້ວ
+          </h3>
         </div>
       </div>
     </div>

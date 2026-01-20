@@ -13,22 +13,48 @@ export const MENU_ITEMS = [
     path: "/dashboard",
   },
   {
+    id: "basic-info",
+    label: "ຈັດການຂໍ້ມູນພື້ນຖານ",
+    icon: "🗂️",
+    path: "/basic-info", // Parent path (optional depending on sidebar implementation)
+    children: [
+      {
+        id: "branch",
+        label: "ສາຂາ",
+        icon: "🏢",
+        path: "/branch",
+      },
+      {
+        id: "board",
+        label: "ຄະນະກໍາມະການ",
+        icon: "👥",
+        path: "/board",
+      },
+      {
+        id: "department",
+        label: "ພະແນກ",
+        icon: "🏛️",
+        path: "/department",
+      },
+      {
+        id: "position",
+        label: "ຕຳແໜ່ງ",
+        icon: "💼",
+        path: "/position",
+      },
+      {
+        id: "document-category",
+        label: "ປະເພດເອກະສານ",
+        icon: "📂",
+        path: "/document-category",
+      },
+    ],
+  },
+  {
     id: "users",
     label: "ຈັດການຜູ້ໃຊ້",
        icon: UsersIcon,
     path: "/users",
-    children: [
-      {
-        id: "users-list",
-        label: "ຈັດການຜູ້ໃຊ້",
-        path: "/users/list",
-      },
-      {
-        id: "initial-system",
-        label: "ລິເລີ່ມລະບົບເອກສານ",
-        path: "/users/initial-system",
-      },
-    ],
   },
   {
     id: "documents",

@@ -1,72 +1,113 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import FormInput from "../common/FormInput";
 import Select from "../common/Select";
 import Button from "../common/Button";
+import ConfirmProgressDialog from "../common/ConfirmProgressDialog";
 
+// Parent should pass a unique `key` prop when opening modal to reset form state
 export default function UserFormModal({
   isOpen,
   onClose,
   onSubmit,
   user = null,
 }) {
-  const [formData, setFormData] = useState({
-    studentId: user?.studentId || "",
-    name: user?.name || "",
-    email: user?.email || "",
-    password: user ? "" : "",
-    phone: user?.phone || "",
-    status: user?.status || "",
-    role: user?.role || "User",
-    department: user?.department || "",
-  });
+  // Initialize form with user data (runs once per formKey change due to parent key prop)
+  const [formData, setFormData] = useState(() => ({
+    usercode: user?.usercode || "",
+    username: user?.username || "",
+    shortname: user?.shortname || "",
+    gendername: user?.gendername || "ຊາຍ",
+    statustype: user?.statustype || "ADD",
+    changeme: user?.changeme || "YES",
+    departmentname: user?.departmentmodel?.departmentname || "",
+  }));
 
   const [errors, setErrors] = useState({});
   const [isClosing, setIsClosing] = useState(false);
+  const [submitDialog, setSubmitDialog] = useState({
+    open: false,
+    status: "confirm",
+  });
+
+  // Refs for input fields
+  const usernameRef = useRef(null);
+  const shortnameRef = useRef(null);
+  const gendernameRef = useRef(null);
+  const statustypeRef = useRef(null);
+  const changemeRef = useRef(null);
+  const departmentnameRef = useRef(null);
 
   if (!isOpen && !isClosing) return null;
 
+  // Refs object for easy access
+  const inputRefs = {
+    username: usernameRef,
+    shortname: shortnameRef,
+    gendername: gendernameRef,
+    statustype: statustypeRef,
+    changeme: changemeRef,
+    departmentname: departmentnameRef,
+  };
+
+  // Handle Enter key to move to next input
+  const handleKeyDown = (nextFieldName) => (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      inputRefs[nextFieldName]?.current?.focus();
+    }
+  };
+
   const handleChange = (field) => (e) => {
-    setFormData({ ...formData, [field]: e.target.value });
-    // Clear error when user types
+    let value = e.target.value;
+
+    // allow only English letters + numbers for usercode
+    if (field === "usercode") {
+      value = value.replace(/[^a-zA-Z0-9]/g, "");
+    }
+
+    setFormData({ ...formData, [field]: value });
+
     if (errors[field]) {
       setErrors({ ...errors, [field]: "" });
     }
   };
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
     // Basic validation
     const newErrors = {};
-    if (!formData.studentId) newErrors.studentId = "ກະລຸນາປ້ອນລະຫັດ";
-    if (!formData.name) newErrors.name = "ກະລຸນາປ້ອນຊື່";
-    if (!formData.email) newErrors.email = "ກະລຸນາປ້ອນອີເມວ";
-    if (!user && !formData.password) newErrors.password = "ກະລຸນາປ້ອນລະຫັດຜ່ານ";
-    if (!formData.role) newErrors.role = "ກະລຸນາເລືອກບົດບາດ";
-    if (!formData.department) newErrors.department = "ກະລຸນາເລືອກພະແນກ";
+    if (!formData.usercode) newErrors.usercode = "ກະລຸນາປ້ອນລະຫັດ";
+    if (!formData.username) newErrors.username = "ກະລຸນາປ້ອນຊື່";
+    if (!formData.departmentname) newErrors.departmentname = "ກະລຸນາປ້ອນພະແນກ";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    // ปิด form ด้วย animation ก่อน
+    // Show confirm dialog
+    setSubmitDialog({ open: true, status: "confirm" });
+  };
+
+  const handleConfirmSubmit = async () => {
+    setSubmitDialog({ open: true, status: "loading" });
+    await onSubmit(formData);
+    setSubmitDialog({ open: true, status: "success" });
+  };
+
+  const handleCancelSubmit = () => {
+    setSubmitDialog({ open: false, status: "confirm" });
+  };
+
+  const handleCloseSubmit = () => {
+    setSubmitDialog({ open: false, status: "confirm" });
+
+    // Close form modal
     setIsClosing(true);
     setTimeout(() => {
-      // ส่งข้อมูลไปให้ parent จัดการ loading และ submit
-      onSubmit(formData);
-
-      // รีเซ็ต form
-      setFormData({
-        studentId: "",
-        name: "",
-        email: "",
-        password: "",
-        phone: "",
-        status: "",
-        role: "User",
-        department: "",
-      });
+      onClose();
       setErrors({});
       setIsClosing(false);
     }, 300);
@@ -76,16 +117,6 @@ export default function UserFormModal({
     setIsClosing(true);
     setTimeout(() => {
       onClose();
-      setFormData({
-        studentId: "",
-        name: "",
-        email: "",
-        password: "",
-        phone: "",
-        status: "",
-        role: "User",
-        department: "",
-      });
       setErrors({});
       setIsClosing(false);
     }, 300);
@@ -95,17 +126,19 @@ export default function UserFormModal({
     handleClose();
   };
 
-  const roleOptions = [
-    { value: "User", label: "User" },
-    { value: "Admin", label: "Admin" },
-    { value: "Manager", label: "Manager" },
+  const genderOptions = [
+    { value: "ຊາຍ", label: "ຊາຍ" },
+    { value: "ຍິງ", label: "ຍິງ" },
   ];
 
-  const departmentOptions = [
-    { value: "ພາກຄອມພິວເຕີ", label: "ພາກຄອມພິວເຕີ" },
-    { value: "ພາກໄຟຟ້າ", label: "ພາກໄຟຟ້າ" },
-    { value: "ພາກກົນຈັກ", label: "ພາກກົນຈັກ" },
-    { value: "ພາກສິລະປະ", label: "ພາກສິລະປະ" },
+  const statusOptions = [
+    { value: "ADD", label: "ເພີ່ມ" },
+    { value: "INACTIVE", label: "ປິດໃຊ້ງານ" },
+  ];
+
+  const changemeOptions = [
+    { value: "YES", label: "YES" },
+    { value: "NO", label: "NO" },
   ];
 
   return (
@@ -129,87 +162,75 @@ export default function UserFormModal({
           <FormInput
             label="ລະຫັດ"
             theme="light"
-            placeholder=""
-            value={formData.studentId}
-            onChange={handleChange("studentId")}
-            error={errors.studentId}
-            hasError={!!errors.studentId}
+            placeholder="ກະລຸນາປ້ອນລະຫັດ"
+            value={formData.usercode}
+            onChange={handleChange("usercode")}
+            onKeyDown={handleKeyDown("username")}
+            error={errors.usercode}
+            hasError={!!errors.usercode}
+            inputMode="text"
+            autoComplete="off"
           />
 
           <FormInput
             label="ຊື່"
             theme="light"
-            placeholder=""
-            value={formData.name}
-            onChange={handleChange("name")}
-            error={errors.name}
-            hasError={!!errors.name}
+            placeholder="ກະລຸນາປ້ອນຊື່"
+            value={formData.username}
+            onChange={handleChange("username")}
+            onKeyDown={handleKeyDown("shortname")}
+            inputRef={usernameRef}
+            error={errors.username}
+            hasError={!!errors.username}
           />
 
-          <FormInput
-            label="ອີເມວ"
-            type="email"
+           <FormInput
+            label="ຊື່ຫຍໍ້"
             theme="light"
-            placeholder=""
-            value={formData.email}
-            onChange={handleChange("email")}
-            error={errors.email}
-            hasError={!!errors.email}
+            placeholder="ກະລຸນາປ້ອນຊື່ຫຍໍ້"
+            value={formData.shortname}
+            onChange={handleChange("shortname")}
+            onKeyDown={handleKeyDown("gendername")}
+            inputRef={shortnameRef}
           />
 
-          {!user && (
-            <FormInput
-              label="ລະຫັດຜ່ານ"
-              type="password"
-              theme="light"
-              placeholder=""
-              value={formData.password}
-              onChange={handleChange("password")}
-              error={errors.password}
-              hasError={!!errors.password}
-            />
-          )}
-
-          <FormInput
-            label="ເບີໂທ"
+           <Select
+            label="ເພດ"
             theme="light"
-            placeholder=""
-            value={formData.phone}
-            onChange={handleChange("phone")}
-            error={errors.phone}
-            hasError={!!errors.phone}
+            value={formData.gendername}
+            onChange={handleChange("gendername")}
+            options={genderOptions}
+            inputRef={gendernameRef}
           />
 
-          <FormInput
-            label="ສະຖານະການໃຊ້ງານ"
+           <FormInput
+            label="ພະແນກ"
             theme="light"
-            placeholder=""
-            value={formData.status}
-            onChange={handleChange("status")}
-            error={errors.status}
-            hasError={!!errors.status}
+            placeholder="ກະລຸນາປ້ອນພະແນກ"
+            value={formData.departmentname}
+            onChange={handleChange("departmentname")}
+            onKeyDown={handleKeyDown("statustype")}
+            inputRef={departmentnameRef}
+            error={errors.departmentname}
+            hasError={!!errors.departmentname}
           />
 
-          <Select
-            label="ບົດບາດ"
+           <Select
+            label="ສະຖານະ"
             theme="light"
-            value={formData.role}
-            onChange={handleChange("role")}
-            options={roleOptions}
-            placeholder="ເລືອກບົດບາດ"
-            error={errors.role}
-            hasError={!!errors.role}
+            value={formData.statustype}
+            onChange={handleChange("statustype")}
+            options={statusOptions}
+            inputRef={statustypeRef}
           />
 
-          <Select
-            label="ພາກວິຊາ/ພະແນກ"
+           <Select
+            label="Change Me"
             theme="light"
-            value={formData.department}
-            onChange={handleChange("department")}
-            options={departmentOptions}
-            placeholder="ເລືອກພາກວິຊາ"
-            error={errors.department}
-            hasError={!!errors.department}
+            value={formData.changeme}
+            onChange={handleChange("changeme")}
+            options={changemeOptions}
+            inputRef={changemeRef}
           />
 
           <div className="flex justify-end gap-3 pt-4">
@@ -234,6 +255,24 @@ export default function UserFormModal({
           </div>
         </form>
       </div>
+
+      <ConfirmProgressDialog
+        isOpen={submitDialog.open}
+        status={submitDialog.status}
+        title={user ? "ຢືນຢັນການແກ້ໄຂ" : "ຢືນຢັນການສ້າງ"}
+        message={
+          user
+            ? `ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການແກ້ໄຂຂໍ້ມູນຜູ້ໃຊ້ "${formData.username}"?`
+            : `ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການສ້າງຜູ້ໃຊ້ "${formData.username}"?`
+        }
+        confirmText={user ? "ແກ້ໄຂ" : "ສ້າງ"}
+        cancelText="ຍົກເລີກ"
+        loadingMessage={user ? "ກຳລັງແກ້ໄຂຂໍ້ມູນ..." : "ກຳລັງສ້າງຜູ້ໃຊ້..."}
+        successMessage={user ? "ແກ້ໄຂຂໍ້ມູນສຳເລັດແລ້ວ" : "ສ້າງຜູ້ໃຊ້ສຳເລັດແລ້ວ"}
+        onConfirm={handleConfirmSubmit}
+        onCancel={handleCancelSubmit}
+        onClose={handleCloseSubmit}
+      />
     </div>
   );
 }

@@ -1,17 +1,32 @@
-import Button from "../common/Button";
-import FormInput from "../common/FormInput";
-
-import userplus from "../../assets/icon/userplus.svg";
+import Button from "./Button";
+import FormInput from "./FormInput";
 import search from "../../assets/icon/search.svg";
 
-export default function UserToolbar({ searchText, onSearchChange, onCreate }) {
+/**
+ * Generic Toolbar component for search and create actions
+ * @param {Object} props
+ * @param {string} props.searchText - Current search text
+ * @param {Function} props.onSearchChange - Search change handler
+ * @param {Function} props.onCreate - Create button click handler
+ * @param {string} props.searchPlaceholder - Placeholder text for search input
+ * @param {string} props.createButtonText - Text for create button
+ * @param {JSX.Element} props.createButtonIcon - Icon for create button
+ */
+export default function GenericToolbar({
+  searchText,
+  onSearchChange,
+  onCreate,
+  searchPlaceholder = "ຄົ້ນຫາ",
+  createButtonText = "ສ້າງ",
+  createButtonIcon = null,
+}) {
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div className="w-full md:max-w-md">
         <FormInput
           label=""
           theme="light"
-          placeholder="ຄົ້ນຫາ"
+          placeholder={searchPlaceholder}
           value={searchText}
           onChange={(e) => onSearchChange(e.target.value)}
           rightIcon={
@@ -36,8 +51,8 @@ export default function UserToolbar({ searchText, onSearchChange, onCreate }) {
         className="bg-[#0F75BC] text-white hover:bg-blue-700 hover:scale-100 hover:shadow-none"
       >
         <span className="flex items-center gap-2">
-          <img src={userplus} alt="Add user" className="h-7 w-7 brightness-0 invert" />
-          ສ້າງ User
+          {createButtonIcon}
+          {createButtonText}
         </span>
       </Button>
     </div>

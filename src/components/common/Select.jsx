@@ -95,7 +95,11 @@ export default function Select({
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           className={`w-full rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 transition-all duration-300 ease-out cursor-pointer text-left flex items-center justify-between
-            ${hasError ? "border-2 border-red-500 focus:ring-red-200 animate-shake" : ""}
+            ${
+              hasError
+                ? "border-2 border-red-500 focus:ring-red-200 animate-shake"
+                : ""
+            }
             ${selectBase}
             ${isFocused ? "scale-[1.02] shadow-lg" : ""}
             ${isHovered && !isFocused ? "scale-[1.01]" : ""}
@@ -149,13 +153,18 @@ export default function Select({
                     key={option.value}
                     type="button"
                     onClick={() => handleSelect(option.value)}
-                    className={`w-full text-left px-4 py-2 text-sm transition-all duration-200 hover:bg-blue-50 hover:text-blue-600 hover:pl-6
-                      ${value === option.value ? "bg-blue-100 text-blue-700 font-medium" : "text-gray-700"}
-                      animate-fadeInUp
-                    `}
-                    style={{
-                      animationDelay: `${index * 30}ms`,
-                    }}
+                    className={`w-full text-left px-4 py-2 text-sm transition-all duration-200
+    cursor-pointer
+    hover:bg-blue-50 hover:text-blue-600 hover:pl-6
+    disabled:cursor-not-allowed
+    ${
+      value === option.value
+        ? "bg-blue-100 text-blue-700 font-medium"
+        : "text-gray-700"
+    }
+    animate-fadeInUp
+  `}
+                    style={{ animationDelay: `${index * 30}ms` }}
                   >
                     <div className="flex items-center gap-2">
                       {value === option.value && (

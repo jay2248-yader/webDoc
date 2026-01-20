@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import { MENU_ITEMS } from '../../constants/navigation';
 
 /**
  * MainLayout - Main application layout with Sidebar and Header
@@ -10,17 +11,36 @@ import Header from './Header';
 export default function MainLayout({ title }) {
   const location = useLocation();
 
-  const resolveTitle = (pathname) => {
-    if (pathname.startsWith('/users')) {
-      return 'ຈັດການ User';
-    }
-    if (pathname.startsWith('/dashboard')) {
-      return 'ໜ້າຫຼັກ';
-    }
+  /* Helper to find label recursively from MENU_ITEMS */
+  const getPageTitle = (path) => {
+    // 1. Exact match search
+    const findLabel = (items) => {
+      for (const item of items) {
+        // If current item matches path
+        if (item.path === path) return item.label;
+        
+        // If has children, search deeper
+        if (item.children) {
+          const childLabel = findLabel(item.children);
+          if (childLabel) return childLabel;
+        }
+      }
+      return null;
+    };
+
+    // 2. Try to find precise label
+    let label = findLabel(MENU_ITEMS);
+    if (label) return label;
+
+    // 3. Fallback logic for nested routes not explicitly in menu
+    if (path.startsWith('/users')) return 'ຈັດການ User';
+    if (path.startsWith('/dashboard')) return 'ໜ້າຫຼັກ';
+    
+    // Default
     return 'ໜ້າຫຼັກ';
   };
 
-  const resolvedTitle = title || resolveTitle(location.pathname);
+  const resolvedTitle = title || getPageTitle(location.pathname);
 
   return (
     <div className="flex h-screen overflow-hidden">

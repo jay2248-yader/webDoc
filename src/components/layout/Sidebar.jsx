@@ -6,8 +6,6 @@ import logo from "../../assets/Logo/CSC_LOGO.svg";
 export default function Sidebar() {
   const location = useLocation();
   const [openMenus, setOpenMenus] = useState({});
-  const [manualActiveMenuId, setManualActiveMenuId] = useState(null);
-  const [manualActivePath, setManualActivePath] = useState(null);
 
   const toggleMenu = (menuId) => {
     setOpenMenus((prev) => ({
@@ -34,17 +32,22 @@ export default function Sidebar() {
     return activeItem ? activeItem.id : null;
   };
 
-  const activeMenuIdFromPath = getActiveMenuIdFromPath(location.pathname);
-  const useManualActive =
-    manualActiveMenuId && manualActivePath === location.pathname;
-  const resolvedActiveMenuId = useManualActive
-    ? manualActiveMenuId
-    : activeMenuIdFromPath;
+  // ใช้ location.pathname โดยตรง
+  const activeMenuId = getActiveMenuIdFromPath(location.pathname);
 
-  const isMenuActive = (item) => resolvedActiveMenuId === item.id;
+  const isMenuActive = (item) => activeMenuId === item.id;
 
   const isPathActive = (path) => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
+  };
+
+  // เช็คว่า menu ควรเปิดหรือไม่ (user toggle หรือ active child)
+  const isMenuOpen = (item) => {
+    if (openMenus[item.id] !== undefined) {
+      return openMenus[item.id];
+    }
+    // Auto-open ถ้ามี active child
+    return item.id === activeMenuId && item.children;
   };
 
   return (
@@ -71,8 +74,6 @@ export default function Sidebar() {
     }
   `}
               onClick={() => {
-                setManualActiveMenuId(item.id);
-                setManualActivePath(location.pathname);
                 if (item.children) {
                   toggleMenu(item.id);
                 }
@@ -104,13 +105,13 @@ export default function Sidebar() {
 
               {item.children && (
                 <span className="text-xs">
-                  {openMenus[item.id] ? "▼" : "▶"}
+                  {isMenuOpen(item) ? "▼" : "▶"}
                 </span>
               )}
             </div>
 
             {/* Submenu */}
-            {item.children && openMenus[item.id] && (
+            {item.children && isMenuOpen(item) && (
               <div className="bg-blue-700 rounded-b-xl">
                 {" "}
       

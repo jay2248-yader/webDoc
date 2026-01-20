@@ -59,6 +59,8 @@ export default function LoginForm() {
         error={fieldErrors.employeeId}
         hasError={!!fieldErrors.employeeId}
         maxLength={20}
+        rounded="xl"
+        size="lg"
       />
 
       {/* Password Input */}
@@ -74,6 +76,8 @@ export default function LoginForm() {
         showPassword={showPassword}
         onTogglePassword={() => setShowPassword(!showPassword)}
         inputRef={passwordInputRef}
+         rounded="xl"
+         size="lg"
       />
 
       {/* Submit Button */}
