@@ -250,6 +250,7 @@ export default function DocumentCategoryPage() {
       />
 
       <DocumentCategoryFormModal
+        key={editingCategory?.doccategoryid || "new"}
         isOpen={showFormModal}
         category={editingCategory}
         onClose={handleCloseModal}

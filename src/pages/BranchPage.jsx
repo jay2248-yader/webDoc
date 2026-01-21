@@ -1,31 +1,10 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import GenericToolbar from "../components/common/GenericToolbar";
 import GenericDataTable, { Button } from "../components/common/GenericDataTable";
 import BranchFormModal from "../components/branches/BranchFormModal";
 import LoadingDialog from "../components/common/LoadingDialog";
+import { getAllBranches, createBranch, deleteBranch, updateBranch } from "../services/branchservice";
 
-const branches = [
-  {
-    createdate: "2025-11-13 14:14:50",
-    brid: "2",
-    branchname: "CSC ສໍານັກງານໃຫ່ຍ ນະຄອນຫຼວງວຽງຈັນ",
-    phone: "",
-    fax: "",
-    moreinfo: "ບ້ານໂຊກໃຫ່ຍ ເມືອງໄຊເສດຖາ ນະຄອນຫຼວງວຽງຈັນ, ຖະໜົນ 450 ປີ.",
-    statustype: "ADD",
-    createby: "1111982",
-  },
-  {
-    createdate: "2025-12-01 09:30:00",
-    brid: "3",
-    branchname: "CSC ສາຂາປາກເຊ",
-    phone: "020-23456789",
-    fax: "",
-    moreinfo: "ຕະຫຼາດດາວເຮືອງ, ປາກເຊ, ຈຳປາສັກ",
-    statustype: "ADD",
-    createby: "1111982",
-  },
-];
 
 export default function BranchPage() {
   const [searchText, setSearchText] = useState("");
@@ -34,9 +13,29 @@ export default function BranchPage() {
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingBranch, setEditingBranch] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [branches, setBranches] = useState([]);
+  const [loadingData, setLoadingData] = useState(true);
 
   // Reference to the delete handler from GenericDataTable
   const tableRef = useRef(null);
+
+  // Fetch branches on mount
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        setLoadingData(true);
+        const params = { page, limit: pageSize, search: searchText };
+        const data = await getAllBranches(params);
+        setBranches(data);
+      } catch (error) {
+        console.error("Failed to fetch branches:", error);
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    fetchBranches();
+  }, [page, pageSize, searchText]);
 
   // 1) Filter branches
   const filtered = useMemo(() => {
@@ -49,7 +48,7 @@ export default function BranchPage() {
         b.moreinfo.toLowerCase().includes(lower) ||
         b.createby.toLowerCase().includes(lower)
     );
-  }, [searchText]);
+  }, [searchText, branches]);
 
   // 2) Total pages
   const totalPages = Math.ceil(filtered.length / pageSize) || 1;
@@ -104,22 +103,43 @@ export default function BranchPage() {
   };
 
   const handleSubmitBranch = async (formData) => {
-    const isEdit = !!editingBranch;
+  const isEdit = !!editingBranch;
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
+  try {
     if (isEdit) {
-      console.log("update branch", editingBranch.brid, formData);
+      // ✅ update ต้องส่ง brid ไปด้วย (ตามรูปที่คุณส่ง PUT body)
+      await updateBranch({
+        brid: editingBranch.brid,
+        ...formData,
+      });
     } else {
-      console.log("create branch", formData);
+      await createBranch(formData);
     }
-  };
+
+    // ✅ Refresh data หลังทำสำเร็จ (ทั้ง add และ edit)
+    const params = { page, limit: pageSize, search: searchText };
+    const data = await getAllBranches(params);
+    setBranches(data);
+  } catch (error) {
+    console.error("Failed to submit branch:", error);
+    throw error;
+  }
+};
+
 
   const handleDeleteBranch = async (branch) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    console.log("delete branch", branch);
+    try {
+      // เรียก API ลบ branch
+      await deleteBranch(branch.brid);
+
+      // Refresh data หลังจากลบสำเร็จ
+      const params = { page, limit: pageSize, search: searchText };
+      const data = await getAllBranches(params);
+      setBranches(data);
+    } catch (error) {
+      console.error("Failed to delete branch:", error);
+      throw error;
+    }
   };
 
   // Define columns configuration
@@ -207,6 +227,10 @@ export default function BranchPage() {
     },
   ];
 
+  if (loadingData) {
+    return <LoadingDialog isOpen={true} message="ກຳລັງໂຫຼດຂໍ້ມູນ..." />;
+  }
+
   return (
     <div className="space-y-6">
       <GenericToolbar
@@ -249,6 +273,7 @@ export default function BranchPage() {
       />
 
       <BranchFormModal
+        key={editingBranch?.brid || "new"}
         isOpen={showFormModal}
         branch={editingBranch}
         onClose={handleCloseModal}

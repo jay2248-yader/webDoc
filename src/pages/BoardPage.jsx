@@ -239,6 +239,7 @@ export default function BoardPage() {
       />
 
       <BoardFormModal
+        key={editingBoard?.bdid || "new"}
         isOpen={showFormModal}
         board={editingBoard}
         onClose={handleCloseModal}

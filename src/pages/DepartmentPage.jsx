@@ -246,6 +246,7 @@ export default function DepartmentPage() {
       />
 
       <DepartmentFormModal
+        key={editingDepartment?.dpid || "new"}
         isOpen={showFormModal}
         department={editingDepartment}
         onClose={handleCloseModal}

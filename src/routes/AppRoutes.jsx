@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useAuthStore } from '../store/authstore';
 import LoginPage from '../pages/LoginPage';
 import Dashboard from '../pages/Dashboard';
 import UserPage from '../pages/UserPage';
@@ -12,16 +12,7 @@ import DocumentCategoryPage from '../pages/DocumentCategoryPage';
 import MainLayout from '../components/layout/MainLayout';
 
 const AppRoutes = () => {
-  const { isAuthenticated, loading } = useAuth();
-
-  // Show loading state while checking authentication
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-2xl text-gray-600">ກຳລັງໂຫຼດ...</div>
-      </div>
-    );
-  }
+  const isAuthenticated = useAuthStore((state) => state.isAuthed());
 
   return (
     <Routes>

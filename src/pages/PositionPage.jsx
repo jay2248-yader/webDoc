@@ -239,6 +239,7 @@ export default function PositionPage() {
       />
 
       <PositionFormModal
+        key={editingPosition?.pid || "new"}
         isOpen={showFormModal}
         position={editingPosition}
         onClose={handleCloseModal}

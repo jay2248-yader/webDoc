@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import FormInput from "../common/FormInput";
 import Select from "../common/Select";
 import Button from "../common/Button";
@@ -17,16 +17,8 @@ export default function BoardFormModal({
     statustype: board?.statustype || "ADD",
   });
 
-  useEffect(() => {
-    if (isOpen) {
-      setFormData({
-        bdid: board?.bdid || "",
-        boardtname: board?.boardtname || "",
-        moreinfo: board?.moreinfo || "",
-        statustype: board?.statustype || "ADD",
-      });
-    }
-  }, [isOpen, board]);
+  // ไม่ต้องใช้ useEffect แล้ว เพราะใช้ key prop ใน parent component
+  // Component จะถูก remount ใหม่เมื่อ board เปลี่ยน
 
   const [errors, setErrors] = useState({});
   const [isClosing, setIsClosing] = useState(false);

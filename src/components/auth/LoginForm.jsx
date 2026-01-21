@@ -1,5 +1,4 @@
 import useLogin from "../../hooks/useLogin";
-import useAuth from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import FormInput from "../common/FormInput";
 import Button from "../common/Button";
@@ -7,7 +6,6 @@ import ErrorMessage from "../common/ErrorMessage";
 
 export default function LoginForm() {
   const navigate = useNavigate();
-  const { login } = useAuth();
   const {
     employeeId,
     password,
@@ -25,17 +23,11 @@ export default function LoginForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const success = await handleFormSubmit(e);
-    
+
     if (success) {
-      // Login to AuthContext
-      login({
-        employeeId,
-        role: 'Admin', // TODO: Get from API response
-      });
-      
-      // Navigate to dashboard
+      // Navigate to dashboard (auth already handled in useLogin)
       navigate('/dashboard');
     }
   };

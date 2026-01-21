@@ -1,5 +1,7 @@
 import { useState, useRef } from "react";
 import { createInputHandler } from "../utils/validation";
+import { loginUser } from "../services/authservice";
+import { useAuthStore } from "../store/authstore";
 
 export default function useLogin() {
   const [employeeId, setEmployeeId] = useState("");
@@ -15,6 +17,9 @@ export default function useLogin() {
 
   // สร้าง ref สำหรับ password input
   const passwordInputRef = useRef(null);
+
+  // Zustand store
+  const setAuth = useAuthStore((state) => state.setAuth);
 
   // ใช้ createInputHandler utility แทนการเขียน validation ซ้ำ
   const handleEmployeeIdChange = createInputHandler(setEmployeeId, {
@@ -62,16 +67,22 @@ export default function useLogin() {
     try {
       setLoading(true);
 
-      // 🔗 ตัวอย่าง (เปลี่ยนเป็น API จริงภายหลัง)
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // เรียก API จริง
+      const userData = await loginUser({
+        usercode: employeeId,
+        pwds: password,
+      });
 
-      console.log("LOGIN DATA", { employeeId, password });
+      // เก็บข้อมูล user + token ใน Zustand store
+      setAuth(userData);
+
+      console.log("LOGIN SUCCESS", userData);
 
       // Return success
       return true;
     } catch (err) {
-      console.error(err);
-      setError("ລະຫັດພະນັກງານ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ");
+      console.error("LOGIN ERROR", err);
+      setError(err.message || "ລະຫັດພະນັກງານ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ");
       return false;
     } finally {
       setLoading(false);

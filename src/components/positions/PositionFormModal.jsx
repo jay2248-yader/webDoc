@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import FormInput from "../common/FormInput";
 import Select from "../common/Select";
 import Button from "../common/Button";
@@ -17,16 +17,8 @@ export default function PositionFormModal({
     statustype: position?.statustype || "ADD",
   });
 
-  useEffect(() => {
-    if (isOpen) {
-      setFormData({
-        pid: position?.pid || "",
-        positionname: position?.positionname || "",
-        moreinfo: position?.moreinfo || "",
-        statustype: position?.statustype || "ADD",
-      });
-    }
-  }, [isOpen, position]);
+  // ไม่ต้องใช้ useEffect แล้ว เพราะใช้ key prop ใน parent component
+  // Component จะถูก remount ใหม่เมื่อ position เปลี่ยน
 
   const [errors, setErrors] = useState({});
   const [isClosing, setIsClosing] = useState(false);

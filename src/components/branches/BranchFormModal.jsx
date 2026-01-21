@@ -1,6 +1,5 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import FormInput from "../common/FormInput";
-import Select from "../common/Select";
 import Button from "../common/Button";
 import ConfirmProgressDialog from "../common/ConfirmProgressDialog";
 
@@ -16,21 +15,7 @@ export default function BranchFormModal({
     phone: branch?.phone || "",
     fax: branch?.fax || "",
     moreinfo: branch?.moreinfo || "",
-    statustype: branch?.statustype || "ADD",
   });
-
-  useEffect(() => {
-    if (isOpen) {
-      setFormData({
-        brid: branch?.brid || "",
-        branchname: branch?.branchname || "",
-        phone: branch?.phone || "",
-        fax: branch?.fax || "",
-        moreinfo: branch?.moreinfo || "",
-        statustype: branch?.statustype || "ADD",
-      });
-    }
-  }, [isOpen, branch]);
 
   const [errors, setErrors] = useState({});
   const [isClosing, setIsClosing] = useState(false);
@@ -39,25 +24,21 @@ export default function BranchFormModal({
     status: "confirm",
   });
 
-  // Refs for input fields
+  // Refs
   const branchnameRef = useRef(null);
   const phoneRef = useRef(null);
   const faxRef = useRef(null);
   const moreinfoRef = useRef(null);
-  const statustypeRef = useRef(null);
 
   if (!isOpen && !isClosing) return null;
 
-  // Refs object for easy access
   const inputRefs = {
     branchname: branchnameRef,
     phone: phoneRef,
     fax: faxRef,
     moreinfo: moreinfoRef,
-    statustype: statustypeRef,
   };
 
-  // Handle Enter key to move to next input
   const handleKeyDown = (nextFieldName) => (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -68,47 +49,48 @@ export default function BranchFormModal({
   const handleChange = (field) => (e) => {
     let value = e.target.value;
 
-    // Allow only numbers for brid/phone/fax if needed, or keeping it free text based on sample
     if (field === "phone" || field === "fax") {
       value = value.replace(/[^0-9-]/g, "");
     }
-    
-    // Assuming brid is numeric ID
+
     if (field === "brid") {
-        value = value.replace(/[^0-9]/g, "");
+      value = value.replace(/[^0-9]/g, "");
     }
 
-    setFormData({ ...formData, [field]: value });
+    setFormData((prev) => ({ ...prev, [field]: value }));
 
     if (errors[field]) {
-      setErrors({ ...errors, [field]: "" });
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Basic validation
     const newErrors = {};
-    if (!formData.brid) newErrors.brid = "ກະລຸນາປ້ອນລະຫັດສາຂາ";
+    if (branch && !formData.brid) newErrors.brid = "ກະລຸນາປ້ອນລະຫັດສາຂາ";
     if (!formData.branchname) newErrors.branchname = "ກະລຸນາປ້ອນຊື່ສາຂາ";
     if (!formData.moreinfo) newErrors.moreinfo = "ກະລຸນາປ້ອນລາຍລະອຽດເພີ່ມເຕີມ";
-    
-    // Optional validations
-    // if (!formData.phone) newErrors.phone = "ກະລຸນາປ້ອນເບີໂທ";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    // Show confirm dialog
     setSubmitDialog({ open: true, status: "confirm" });
   };
 
   const handleConfirmSubmit = async () => {
     setSubmitDialog({ open: true, status: "loading" });
-    await onSubmit(formData);
+
+    const payload = {
+      branchname: formData.branchname,
+      phone: formData.phone,
+      fax: formData.fax,
+      moreinfo: formData.moreinfo,
+    };
+
+    await onSubmit(payload);
     setSubmitDialog({ open: true, status: "success" });
   };
 
@@ -119,11 +101,9 @@ export default function BranchFormModal({
   const handleCloseSubmit = () => {
     setSubmitDialog({ open: false, status: "confirm" });
 
-    // Close form modal
     setIsClosing(true);
     setTimeout(() => {
       onClose();
-      // Reset form handled by useEffect
       setErrors({});
       setIsClosing(false);
     }, 300);
@@ -137,15 +117,6 @@ export default function BranchFormModal({
       setIsClosing(false);
     }, 300);
   };
-
-  const handleCancel = () => {
-    handleClose();
-  };
-
-  const statusOptions = [
-    { value: "ADD", label: "ເພີ່ມ" },
-    { value: "INACTIVE", label: "ປິດໃຊ້ງານ" }, 
-  ];
 
   return (
     <div
@@ -165,19 +136,22 @@ export default function BranchFormModal({
         </h3>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <FormInput
-            label="ລະຫັດ"
-            theme="light"
-            placeholder="ກະລຸນາປ້ອນລະຫັດສາຂາ"
-            value={formData.brid}
-            onChange={handleChange("brid")}
-            onKeyDown={handleKeyDown("branchname")}
-            error={errors.brid}
-            hasError={!!errors.brid}
-            inputMode="numeric"
-            autoComplete="off"
-            disabled={!!branch} // Disable ID on edit if it's a primary key/unique ID
-          />
+          {/* brid เฉพาะตอนแก้ไข */}
+          {branch && (
+            <FormInput
+              label="ລະຫັດ"
+              theme="light"
+              placeholder="ກະລຸນາປ້ອນລະຫັດສາຂາ"
+              value={formData.brid}
+              onChange={handleChange("brid")}
+              onKeyDown={handleKeyDown("branchname")}
+              error={errors.brid}
+              hasError={!!errors.brid}
+              inputMode="numeric"
+              autoComplete="off"
+              disabled={true}
+            />
+          )}
 
           <FormInput
             label="ຊື່ສາຂາ"
@@ -203,7 +177,7 @@ export default function BranchFormModal({
             hasError={!!errors.phone}
           />
 
-           <FormInput
+          <FormInput
             label="ແຟັກ"
             theme="light"
             placeholder="ກະລຸນາປ້ອນແຟັກ"
@@ -221,20 +195,9 @@ export default function BranchFormModal({
             placeholder="ກະລຸນາປ້ອນລາຍລະອຽດ"
             value={formData.moreinfo}
             onChange={handleChange("moreinfo")}
-            onKeyDown={handleKeyDown("statustype")}
             inputRef={moreinfoRef}
             error={errors.moreinfo}
             hasError={!!errors.moreinfo}
-          />
-
-          <Select
-            label="ສະຖານະ"
-            theme="light"
-            value={formData.statustype}
-            onChange={handleChange("statustype")}
-            options={statusOptions}
-            placeholder="ເລືອກສະຖານະ"
-            inputRef={statustypeRef}
           />
 
           <div className="flex justify-end gap-3 pt-4">
@@ -243,10 +206,11 @@ export default function BranchFormModal({
               fullWidth={false}
               variant="secondary"
               size="md"
-              onClick={handleCancel}
+              onClick={handleClose}
             >
               ຍົກເລີກ
             </Button>
+
             <Button
               type="submit"
               fullWidth={false}

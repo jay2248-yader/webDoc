@@ -1,8 +1,9 @@
-import { useAuth } from '../../hooks/useAuth';
+import { useAuthStore } from '../../store/authstore';
 import { useNavigate } from 'react-router-dom';
 
 export default function Header({ title = 'ໜ້າຫຼັກ' }) {
-  const { user, logout } = useAuth();
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -35,9 +36,9 @@ export default function Header({ title = 'ໜ້າຫຼັກ' }) {
               <span className="text-xl">👤</span>
             </div>
             <div className="text-left">
-              <p className="text-sm text-gray-500">@{user?.employeeId || 'user'}</p>
+              <p className="text-sm text-gray-500">@{user?.usercode || 'user'}</p>
               <p className="text-sm font-semibold text-gray-800">
-                {user?.role || 'Admin'}
+                {user?.username || 'User'}
               </p>
             </div>
           </button>

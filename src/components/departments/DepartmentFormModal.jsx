@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import FormInput from "../common/FormInput";
 import Select from "../common/Select";
 import Button from "../common/Button";
@@ -18,17 +18,8 @@ export default function DepartmentFormModal({
     statustype: department?.statustype || "ADD",
   });
 
-  useEffect(() => {
-    if (isOpen) {
-      setFormData({
-        dpid: department?.dpid || "",
-        bdid: department?.bdid || "",
-        departmentname: department?.departmentname || "",
-        moreinfo: department?.moreinfo || "",
-        statustype: department?.statustype || "ADD",
-      });
-    }
-  }, [isOpen, department]);
+  // ไม่ต้องใช้ useEffect แล้ว เพราะใช้ key prop ใน parent component
+  // Component จะถูก remount ใหม่เมื่อ department เปลี่ยน
 
   const [errors, setErrors] = useState({});
   const [isClosing, setIsClosing] = useState(false);
