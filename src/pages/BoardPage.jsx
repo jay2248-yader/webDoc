@@ -1,27 +1,10 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import GenericToolbar from "../components/common/GenericToolbar";
 import GenericDataTable, { Button } from "../components/common/GenericDataTable";
 import BoardFormModal from "../components/boards/BoardFormModal";
 import LoadingDialog from "../components/common/LoadingDialog";
+import { getAllBoards, deleteBoard } from "../services/boardservice";
 
-const boards = [
-  {
-    createdate: "2025-11-27 00:00:00",
-    bdid: "1",
-    boardtname: "ຄະນະຜູ້ອໍານວຍການ ",
-    moreinfo: "",
-    statustype: "ADD",
-    createby: "IT",
-  },
-  {
-    createdate: "2025-11-28 09:15:00",
-    bdid: "2",
-    boardtname: "ຄະນະກໍາມະການກວດສອບ",
-    moreinfo: "ກວດສອບພາຍໃນ",
-    statustype: "ADD",
-    createby: "IT",
-  },
-];
 
 export default function BoardPage() {
   const [searchText, setSearchText] = useState("");
@@ -30,9 +13,29 @@ export default function BoardPage() {
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingBoard, setEditingBoard] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [boards, setBoards] = useState([]);
+  const [loadingData, setLoadingData] = useState(true);
 
   // Reference to the delete handler from GenericDataTable
   const tableRef = useRef(null);
+
+  // Fetch boards on mount
+  useEffect(() => {
+    const fetchBoards = async () => {
+      try {
+        setLoadingData(true);
+        const params = { page, limit: pageSize, search: searchText };
+        const data = await getAllBoards(params);
+        setBoards(data);
+      } catch (error) {
+        console.error("Failed to fetch boards:", error);
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    fetchBoards();
+  }, [page, pageSize, searchText]);
 
   // 1) Filter boards
   const filtered = useMemo(() => {
@@ -45,7 +48,7 @@ export default function BoardPage() {
         b.moreinfo.toLowerCase().includes(lower) ||
         b.createby.toLowerCase().includes(lower)
     );
-  }, [searchText]);
+  }, [searchText, boards]);
 
   // 2) Total pages
   const totalPages = Math.ceil(filtered.length / pageSize) || 1;
@@ -113,9 +116,17 @@ export default function BoardPage() {
   };
 
   const handleDeleteBoard = async (board) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    console.log("delete board", board);
+    try {
+      await deleteBoard(board.bdid);
+
+      // Refresh data หลังจากลบสำเร็จ
+      const params = { page, limit: pageSize, search: searchText };
+      const data = await getAllBoards(params);
+      setBoards(data);
+    } catch (error) {
+      console.error("Failed to delete board:", error);
+      throw error;
+    }
   };
 
   // Define columns configuration
@@ -196,6 +207,10 @@ export default function BoardPage() {
       ),
     },
   ];
+
+  if (loadingData) {
+    return <LoadingDialog isOpen={true} message="ກຳລັງໂຫຼດຂໍ້ມູນ..." />;
+  }
 
   return (
     <div className="space-y-6">

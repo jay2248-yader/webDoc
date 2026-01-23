@@ -18,6 +18,7 @@ export const ENDPOINTS = {
 
   BOARD: {
     GET_ALL: "/api/board/getAllBoard",
+    DELETE: "/api/board/deleteBoard",
   },
 
   DEPARTMENT: {
